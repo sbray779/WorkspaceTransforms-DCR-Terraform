@@ -100,6 +100,23 @@ This transformation:
 - Use Azure Key Vault or environment variables for sensitive values in production
 - Follow the principle of least privilege when assigning Azure permissions
 
+## Post creation
+
+- The module deploys a new workspaceTransforms type DCR that will need to be linked to a target workspace after creation
+- Use the following PowerShell to link (ResourceID of the DCR is inclued in the output from deployment)
+
+Connect-AzAccount
+
+$defaultDcrParams = @'
+{
+    "properties": {
+        "defaultDataCollectionRuleResourceId": "/subscriptions/{subscription}/resourceGroups/{resourcegroup}/providers/Microsoft.Insights/dataCollectionRules/{DCR}"
+    }
+}
+'@
+
+Invoke-AzRestMethod -Path "/subscriptions/{subscription}/resourcegroups/{resourcegroup}/providers/microsoft.operationalinsights/workspaces/{workspace}?api-version=2021-12-01-preview" -Method PATCH -payload $defaultDcrParams
+
 ## Troubleshooting
 
 ### Common Issues
