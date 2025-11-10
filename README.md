@@ -117,6 +117,10 @@ $defaultDcrParams = @'
 
 Invoke-AzRestMethod -Path "/subscriptions/{subscription}/resourcegroups/{resourcegroup}/providers/microsoft.operationalinsights/workspaces/{workspace}?api-version=2021-12-01-preview" -Method PATCH -payload $defaultDcrParams
 
+NOTE:  It can take as much as 30 minutes after the DCR is linked to the workspace before the transformation takes effect:
+
+https://learn.microsoft.com/en-us/azure/azure-monitor/logs/tutorial-workspace-transformations-api
+
 ## Troubleshooting
 
 ### Common Issues

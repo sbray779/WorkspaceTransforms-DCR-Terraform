@@ -1,3 +1,10 @@
+#Random string to use for destination name
+resource "random_string" "destination_name" {
+  length  = 32
+  upper   = false
+  special = false
+}
+
 # Data Collection Rule (WorkspaceTransforms)
 resource "azurerm_monitor_data_collection_rule" "dcr" {
   name                = var.dcr_name
@@ -13,7 +20,7 @@ resource "azurerm_monitor_data_collection_rule" "dcr" {
   destinations {
     log_analytics {
       # This is the friendly destination name within the DCR; can be any unique string.
-      name                  = "workspace-destination"
+      name                  = resource.random_string.destination_name.result
       workspace_resource_id = var.log_analytics_workspace_id
     }
   }
@@ -22,7 +29,7 @@ resource "azurerm_monitor_data_collection_rule" "dcr" {
   # Note: For workspace transformations, the stream should match the table name
   data_flow {
     streams      = ["Microsoft-Table-ApiManagementGatewayLlmLog"]
-    destinations = ["workspace-destination"]
+    destinations = [resource.random_string.destination_name.result]
 
     transform_kql = <<-KQL
       source
