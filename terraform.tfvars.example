@@ -1,0 +1,13 @@
+# Example Terraform Variables File
+# Copy this file to terraform.tfvars and update with your actual values
+
+# Azure Subscription Configuration
+resource_group_name = "your-resource-group-name"
+location           = "eastus2"
+subscription_id    = "00000000-0000-0000-0000-000000000000"
+
+# Data Collection Rule Configuration
+dcr_name = "YourDataCollectionRuleName"
+
+# Log Analytics Workspace Configuration
+log_analytics_workspace_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/your-resource-group/providers/Microsoft.OperationalInsights/workspaces/your-workspace-name"
