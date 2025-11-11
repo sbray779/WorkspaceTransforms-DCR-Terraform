@@ -90,6 +90,8 @@ This transformation:
 ├── Outputs.tf                 # Output definitions
 ├── Providers.tf               # Provider configuration
 ├── terraform.tfvars.example   # Example variables file
+├── LinkDCR.ps1                # PowerShell script to link DCR to workspace
+├── LinkDCR.sh                 # Bash script to link DCR to workspace (in Scripts folder)
 ├── .gitignore                 # Git ignore rules
 └── README.md                  # This file
 ```
@@ -100,26 +102,62 @@ This transformation:
 - Use Azure Key Vault or environment variables for sensitive values in production
 - Follow the principle of least privilege when assigning Azure permissions
 
-## Post creation
+## Linking DCR to Workspace
 
-- The module deploys a new workspaceTransforms type DCR that will need to be linked to a target workspace after creation
-- Use the following PowerShell to link (ResourceID of the DCR is inclued in the output from deployment)
+After deploying the DCR with Terraform, you need to associate it with the Log Analytics workspace for the transformations to take effect. The repository includes scripts to automate this process.
 
-Connect-AzAccount
+### Automated Scripts (Recommended)
 
-$defaultDcrParams = @'
-{
-    "properties": {
-        "defaultDataCollectionRuleResourceId": "/subscriptions/{subscription}/resourceGroups/{resourcegroup}/providers/Microsoft.Insights/dataCollectionRules/{DCR}"
-    }
-}
-'@
+#### **PowerShell Script**
+```powershell
+.\LinkDCR.ps1
+```
+- Automatically reads DCR ID and Workspace ID from Terraform outputs
+- Handles JSON formatting and Azure CLI execution
+- Provides detailed error messages and validation
 
-Invoke-AzRestMethod -Path "/subscriptions/{subscription}/resourcegroups/{resourcegroup}/providers/microsoft.operationalinsights/workspaces/{workspace}?api-version=2021-12-01-preview" -Method PATCH -payload $defaultDcrParams
+#### **Bash Script**
+```bash
+./LinkDCR.sh
+```
+- Cross-platform compatible (Linux/macOS/WSL)
+- Same functionality as PowerShell script
+- Requires Terraform to be available in bash environment
 
-NOTE:  It can take as much as 30 minutes after the DCR is linked to the workspace before the transformation takes effect:
+### Manual Command (Alternative)
 
-https://learn.microsoft.com/en-us/azure/azure-monitor/logs/tutorial-workspace-transformations-api
+If you prefer to run the command manually or need to customize it:
+
+```powershell
+# Using CMD from PowerShell (handles JSON escaping properly)
+cmd /c 'az rest --method PATCH --url "https://management.azure.com/subscriptions/{SUBSCRIPTION_ID}/resourceGroups/{RESOURCE_GROUP_NAME}/providers/Microsoft.OperationalInsights/workspaces/{WORKSPACE_NAME}?api-version=2021-12-01-preview" --headers "Content-Type=application/json" --body "{\"properties\":{\"defaultDataCollectionRuleResourceId\":\"/subscriptions/{SUBSCRIPTION_ID}/resourceGroups/{RESOURCE_GROUP_NAME}/providers/Microsoft.Insights/dataCollectionRules/{DCR_NAME}\"}}"'
+```
+
+**Replace the placeholders:**
+- `{SUBSCRIPTION_ID}` - Your Azure subscription ID
+- `{RESOURCE_GROUP_NAME}` - Resource group name
+- `{WORKSPACE_NAME}` - Log Analytics workspace name  
+- `{DCR_NAME}` - Data Collection Rule name
+
+### Using Terraform Outputs (Dynamic)
+
+```powershell
+$workspaceId = terraform output -raw log_analytics_workspace_id
+$dcrId = terraform output -raw dcr_id
+cmd /c "az rest --method PATCH --url `"https://management.azure.com$workspaceId?api-version=2021-12-01-preview`" --headers `"Content-Type=application/json`" --body `"{\\`"properties\\`":{\\`"defaultDataCollectionRuleResourceId\\`":\\`"$dcrId\\`"}}`""
+```
+
+### Prerequisites for Linking
+- Azure CLI installed and authenticated (`az login`)
+- `Monitoring Contributor` role or equivalent permissions
+- Successful Terraform deployment (scripts read from `terraform output`)
+
+### Important Notes
+- **Activation Time**: It can take up to 30 minutes after linking before transformations take effect
+- **Validation**: Both scripts verify the DCR and workspace exist before attempting to link them
+- **Error Handling**: Scripts provide clear error messages if prerequisites aren't met
+
+For more details, see the [Azure Monitor DCR documentation](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/tutorial-workspace-transformations-api)
 
 ## Troubleshooting
 
