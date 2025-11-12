@@ -1,0 +1,5 @@
+{
+  "properties": {
+    "defaultDataCollectionRuleResourceId": "/subscriptions/b5b4a11b-5367-41d2-9ec2-fee75c17c5f9/resourceGroups/law-dcr-production/providers/Microsoft.Insights/dataCollectionRules/ParseLLMGatewayLogs2"
+  }
+}

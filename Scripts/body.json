@@ -1,0 +1,5 @@
+{
+  "properties": {
+    "defaultDataCollectionRuleResourceId": "<Resource ID of DCR>"
+  }
+}
